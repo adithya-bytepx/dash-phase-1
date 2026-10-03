@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Wizard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F3EF; --surface:#FFFFFF; --sunken:#FAF9F6; --line:#E4E2DC; --line-soft:#ECEAE4; --line-strong:#D9D6CE;
+  --ink:#15171C; --ink-2:#3C3F46; --muted:#5B5E66; --faint:#8C8F96;
+  --accent:#3F37C9; --accent-ink:#2E279E; --accent-soft:#EFEEFC; --accent-ring:#E3E1FA;
+  --ok:#3E9A62; --ok-ink:#1D6B3A; --ok-soft:#E3F2E8;
+  --warn-ink:#6E3207; --warn:#B4530A; --warn-soft:#FDF1E3;
+  --err:#B42318; --err-ink:#8F1B12; --err-soft:#FCEDEB;
+  --sf:#1E6FA8; --sf-soft:#E3F1FB;
+  --mono:'Geist Mono',ui-monospace,monospace;
+  --heading-font:"Bricolage Grotesque","Archivo",ui-sans-serif,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:14px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+.spin{animation:spin .9s linear infinite}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+
+/* Closed state: lets you reopen the wizard */
+.reopen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);text-align:center;padding:24px}
+.btn{height:40px;padding:0 16px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;font-weight:500;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn-primary{border:0;background:var(--accent);color:#fff}
+.btn-primary:disabled{opacity:.7}
+
+/* Dialog */
+html.embed,html.embed body{background:transparent}
+html.embed .scrim{background:transparent}
+.scrim{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.dialog{width:920px;max-width:100%;height:640px;max-height:calc(100vh - 32px);background:#fff;border-radius:16px;border:1px solid var(--line);box-shadow:0 24px 64px rgba(21,23,28,.12);display:flex;overflow:hidden}
+.rail{width:240px;flex-shrink:0;background:var(--sunken);border-right:1px solid var(--line-soft);padding:24px 20px;display:flex;flex-direction:column;gap:24px}
+.rail ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.rail li{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px}
+.rail li.cur{background:#fff;box-shadow:0 1px 2px rgba(21,23,28,.08)}
+.mark{width:24px;height:24px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;border:1.5px solid #CFCCC3;color:var(--muted)}
+.cur .mark{background:var(--accent);border-color:var(--accent);color:#fff}
+.done .mark{background:var(--ok);border-color:var(--ok);color:#fff}
+.rail .lbl{font-size:13px;font-weight:500;color:var(--muted)}
+.rail .cur .lbl{font-weight:600;color:var(--ink)}
+.rail .done .lbl{color:var(--ink)}
+.rail .sub{font-size:11px;color:var(--muted)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.head{padding:22px 28px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.eyebrow{font-family:var(--mono);font-size:11px;color:var(--muted)}
+h2,.hd{font-family:var(--heading-font);font-stretch:100%;font-optical-sizing:auto;font-weight:560;letter-spacing:-.02em}
+h2{margin:4px 0;font-size:22px;line-height:1.2}
+.lead{margin:0;font-size:13px;color:var(--muted)}
+.icon-btn{width:32px;height:32px;border:0;border-radius:8px;background:transparent;display:flex;align-items:center;justify-content:center}
+.icon-btn:hover{background:var(--bg)}
+.body{flex:1;min-height:0;padding:20px 28px;display:flex;flex-direction:column;gap:16px;overflow:auto}
+.foot{padding:16px 28px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-size:12px;font-weight:500;color:var(--ink-2)}
+.field small{font-size:11px;color:var(--muted)}
+.opt{font-weight:400;color:var(--muted)}
+.input{height:40px;padding:0 12px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;font-family:var(--mono);font-size:13px;width:100%}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+.input.bad{border-color:var(--err);box-shadow:0 0 0 3px var(--err-soft)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.seg{display:grid;gap:2px;padding:3px;background:#F1EFEA;border-radius:9px}
+.seg button{height:32px;border:0;border-radius:7px;background:transparent;font-size:13px;font-weight:500;color:var(--muted)}
+.seg button[aria-checked="true"]{background:#fff;box-shadow:0 1px 2px rgba(21,23,28,.08);color:var(--ink)}
+.check{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2)}
+.check input{width:16px;height:16px;accent-color:var(--accent)}
+.alert{display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:var(--err-soft);border:1px solid #F3C7C1;color:var(--err-ink)}
+.alert strong{display:block;font-size:13px}
+.alert p{margin:2px 0 0;font-size:12px;line-height:1.5}
+.checklist{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:10px;background:var(--bg)}
+.ck{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.ck.busy{color:var(--ink);font-weight:500}.ck.ok{color:var(--ink)}.ck.fail{color:var(--err-ink);font-weight:500}
+.dot-ok{width:18px;height:18px;border-radius:9px;background:var(--ok);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dot-fail{width:18px;height:18px;border-radius:9px;background:var(--err);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dot-wait{width:18px;height:18px;border-radius:9px;border:1.5px dashed #B8B5AD;flex-shrink:0}
+.connected{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ok-ink)}
+.connected i{width:8px;height:8px;border-radius:4px;background:var(--ok)}
+.picker{flex:1;min-height:300px;display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tree{width:240px;flex-shrink:0;border-right:1px solid var(--line-soft);display:flex;flex-direction:column}
+.search{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-bottom:1px solid var(--line-soft)}
+.search input{border:0;outline:none;width:100%;font-size:13px}
+.tree-list{padding:8px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:2px}
+.node{display:flex;align-items:center;gap:6px;padding:6px 8px;border:0;background:transparent;border-radius:6px;text-align:left;font-family:var(--mono);font-size:12px;color:var(--ink-2);width:100%}
+.node:hover{background:var(--bg)}
+.tbl{display:flex;justify-content:space-between;align-items:center;padding:7px 8px 7px 38px;border:0;border-radius:6px;background:transparent;text-align:left;width:100%;font-family:var(--mono);font-size:12px}
+.tbl:hover{background:var(--bg)}
+.tbl[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
+.tbl small{font-size:11px;color:var(--muted)}
+.preview{flex:1;min-width:0;display:flex;flex-direction:column}
+.preview-head{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--line-soft);font-size:12px;color:var(--muted)}
+.preview-scroll{overflow:auto;flex:1}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{height:34px;background:var(--sunken);text-align:left;padding:0 10px;font-weight:500;border-bottom:1px solid var(--line-soft);white-space:nowrap}
+td{height:32px;padding:0 10px;border-bottom:1px solid #F0EEE9;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+td.num{text-align:right;font-family:var(--mono);font-size:11px}
+td.code{font-family:var(--mono);font-size:11px}
+td.null{color:var(--warn);font-family:var(--mono);font-size:11px}
+.preview-foot{display:flex;align-items:center;gap:10px;padding:12px;border-top:1px solid var(--line-soft);font-size:12px;color:var(--ink-2)}
+.progress{flex:1;display:flex;flex-direction:column;justify-content:center;gap:22px;padding:0 40px}
+.bar{height:10px;border-radius:5px;background:var(--line-soft);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .18s linear}
+.success{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+.success .ring{width:56px;height:56px;border-radius:28px;background:var(--ok-soft);display:flex;align-items:center;justify-content:center}
+.stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;background:var(--ink);color:#fff;box-shadow:0 12px 32px rgba(21,23,28,.24);font-size:13px;animation:pop .2s ease-out;z-index:20}
+.hint{font-size:12px;color:var(--muted);padding:8px 12px;border:1px dashed var(--line-strong);border-radius:8px;background:var(--sunken)}
+.data{flex:1;overflow:auto}
+@media (max-width:760px){
+  .rail{display:none}
+  .dialog{height:auto;min-height:calc(100vh - 32px)}
+  .head,.body,.foot{padding-left:16px;padding-right:16px}
+  .grid2{grid-template-columns:1fr}
+  .tree{width:100%;border-right:0;border-bottom:1px solid var(--line-soft);max-height:220px}
+  .picker{flex-direction:column}
+  .progress{padding:0}
+}
+</style>
+</head>
+<body>
+<div id="dialog-root"></div>
+<div id="toast-root"></div>
+
+<script>
+/* ---------- Fake data ---------- */
+const CATALOG = {
+  SALES_DB: {
+    PUBLIC: {
+      ORDERS_2026: { rows: 48210, cols: [['ORDER_ID','id'],['ORDERED_AT','date'],['EMAIL','email'],['REGION','region'],['TOTAL','money'],['STATUS','status'],['CHANNEL','channel']] },
+      ORDERS_2025: { rows: 131402, cols: [['ORDER_ID','id'],['ORDERED_AT','date'],['EMAIL','email'],['REGION','region'],['TOTAL','money'],['STATUS','status']] },
+      CUSTOMERS:   { rows: 9844, cols: [['CUSTOMER_ID','cid'],['NAME','name'],['EMAIL','email'],['COUNTRY','country'],['CREATED_AT','date']] },
+      REFUNDS:     { rows: 2117, cols: [['REFUND_ID','rid'],['ORDER_ID','id'],['AMOUNT','money'],['REASON','reason'],['REFUNDED_AT','date']] },
+      PRODUCTS:    { rows: 312, cols: [['SKU','sku'],['PRODUCT','product'],['PRICE','money'],['ACTIVE','bool']] }
+    }
+  },
+  MARKETING_DB: {
+    CAMPAIGNS: {
+      CAMPAIGNS:    { rows: 86, cols: [['CAMPAIGN_ID','kid'],['NAME','campaign'],['CHANNEL','channel'],['BUDGET','money'],['STARTED_AT','date']] },
+      EMAIL_EVENTS: { rows: 512930, cols: [['EVENT_ID','eid'],['EMAIL','email'],['EVENT','event'],['CAMPAIGN_ID','kid'],['AT','date']] }
+    }
+  },
+  FINANCE_DB: {
+    LEDGER: {
+      INVOICES: { rows: 22015, cols: [['INVOICE_ID','inv'],['CUSTOMER_ID','cid'],['AMOUNT','money'],['CURRENCY','ccy'],['DUE_AT','date'],['PAID','bool']] },
+      PAYMENTS: { rows: 20877, cols: [['PAYMENT_ID','pid'],['INVOICE_ID','inv'],['AMOUNT','money'],['METHOD','method'],['PAID_AT','date']] }
+    }
+  }
+};
+const FIRST = ['anna.k','li.wei','sam.o','r.patel','e.rossi','h.sato','m.fischer','t.nguyen','c.brown','o.adeyemi','p.silva','k.larsen'];
+const NAMES = ['Anna Kowal','Li Wei','Sam Okoro','Riya Patel','Elena Rossi','Hiro Sato','Max Fischer','Tam Nguyen','Chris Brown','Ola Adeyemi','Pia Silva','Kai Larsen'];
+const POOL = {
+  region:['EU-West','APAC','NA-East','EU-Central','EU-South','NA-South',null],
+  status:['paid','paid','paid','refunded','pending','failed'],
+  channel:['web','app','partner','web'],
+  country:['DE','IN','NG','IT','JP','BR','DK','US'],
+  reason:['damaged','late delivery','duplicate','changed mind'],
+  product:['Starter plan','Pro plan','Team plan','Add-on seats'],
+  campaign:['Autumn launch','Win-back Q3','Partner webinar','Black Friday teaser'],
+  event:['sent','opened','clicked','bounced','opened'],
+  ccy:['EUR','EUR','USD','GBP'],
+  method:['card','sepa','card','bank transfer'],
+  bool:['true','true','false']
+};
+function seeded(n){ let s = n * 9301 + 49297; return () => (s = (s * 9301 + 49297) % 233280) / 233280; }
+function genRows(table, count){
+  const def = findTable(table);
+  const r = seeded(table.length * 17 + count);
+  const pick = a => a[Math.floor(r() * a.length)];
+  return Array.from({length: count}, (_, i) => def.cols.map(([, t]) => {
+    const d = new Date(Date.UTC(2026, 8, 28 + Math.floor(i / 3)));
+    switch (t) {
+      case 'id': return String(50117 + i);
+      case 'cid': return 'C-' + (10420 + i * 7);
+      case 'rid': return 'R-' + (8810 + i);
+      case 'eid': return 'E-' + (991200 + i * 13);
+      case 'kid': return 'K-' + (120 + i);
+      case 'inv': return 'INV-' + (30410 + i);
+      case 'pid': return 'P-' + (77120 + i);
+      case 'sku': return 'SKU-' + (1000 + i * 3);
+      case 'date': return d.toISOString().slice(0, 10);
+      case 'email': return FIRST[i % FIRST.length] + '@mail.com';
+      case 'name': return NAMES[i % NAMES.length];
+      case 'money': return (Math.round(r() * 700) + 49).toFixed(2);
+      default: return POOL[t] ? pick(POOL[t]) : '—';
+    }
+  }));
+}
+function findTable(name){
+  for (const db in CATALOG) for (const sc in CATALOG[db]) if (CATALOG[db][sc][name]) return Object.assign({ db, schema: sc, name }, CATALOG[db][sc][name]);
+  return null;
+}
+const fmt = n => n.toLocaleString('en-US');
+
+/* ---------- Connector (from ?c=Name; defaults to Snowflake) ---------- */
+const DBI = c => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13"/><path d="M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/></svg>`;
+const CONNECTORS = {
+  'REST API':      { badge: 'API', color: '#3C3F46', soft: '#EFEEEA', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3C3F46" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/></svg>' },
+  'Salesforce':    { badge: 'SF',  color: '#2350B8', soft: '#E4ECFD', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" stroke="#2350B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></svg>' },
+  'Dynamics 365':  { badge: 'D365', color: '#0B6FCC', soft: '#E3EEFA', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B6FCC" stroke-width="1.8" stroke-linejoin="round"><path d="M5 2.5l14 6.5-6 3.2L5 8z" fill="#fff"/><path d="M5 8v13.5l14-8.3V9"/><path d="M13 12.2l-8 9.3"/></svg>' },
+  'Snowflake':     { badge: 'SNW', color: '#1E6FA8', soft: '#E3F1FB', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E6FA8" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M20.7 7 3.3 17"/></svg>' },
+  'SQL Server':    { badge: 'SQL', color: '#C4321A', soft: '#FBE7E3', icon: DBI('#C4321A') },
+  'PostgreSQL':    { badge: 'PG',  color: '#336791', soft: '#E4ECF4', icon: DBI('#336791') },
+  'MySQL':         { badge: 'MY',  color: '#B4530A', soft: '#FDF1E3', icon: DBI('#B4530A') },
+  'SharePoint':    { badge: 'SP',  color: '#038387', soft: '#DDF1F1', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#038387" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" fill="#fff"/><path d="M15 9.2c-.6-1-1.7-1.6-3-1.6-1.7 0-3 .9-3 2.2 0 2.9 6 1.6 6 4.4 0 1.3-1.3 2.2-3 2.2-1.4 0-2.6-.7-3.1-1.7"/></svg>' },
+  'Amazon S3':     { badge: 'S3',  color: '#E25444', soft: '#FBE6E3', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E25444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="2.5" fill="#fff"/><path d="M4 5l2 14c.2 1.3 2.8 2.5 6 2.5s5.8-1.2 6-2.5l2-14"/></svg>' },
+  'Azure Blob':    { badge: 'AZ',  color: '#0078D4', soft: '#DFEEFB', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" stroke="#0078D4" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5l8.5 4.7v9.6L12 21.5l-8.5-4.7V7.2z"/><path d="M3.5 7.2 12 12l8.5-4.8M12 12v9.5" fill="none"/></svg>' },
+  'Google Sheets': { badge: 'GS',  color: '#188038', soft: '#E3F3E8', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#188038" stroke-width="1.8" stroke-linejoin="round"><path d="M6 2h8l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff"/><path d="M14 2v5h5"/><path d="M8 11h8v7H8zM8 14.5h8M12 11v7"/></svg>' }
+};
+const PARAMS = new URLSearchParams(location.search);
+const CN = CONNECTORS[PARAMS.get('c')] ? PARAMS.get('c') : 'Snowflake';
+const C = CONNECTORS[CN];
+const EMBED = PARAMS.has('embed');   // opened inside dash-home's overlay
+const tell = msg => { try { parent.postMessage(Object.assign({ source: 'open-wizard' }, msg), '*'); } catch (e) {} };
+document.title = 'Open Wizard · ' + CN;
+if (EMBED) document.documentElement.classList.add('embed');
+
+/* ---------- App state ---------- */
+const S = {
+  open: true,
+  step: 'creds',          // creds | testing | select | importing | done
+  error: null,            // null | 'account' | 'auth' | 'access'
+  auth: 'password',
+  acct: 'acme-prod', user: 'ANALYST_233', pass: '', role: '', wh: 'COMPUTE_WH', save: true,
+  checks: [],
+  expanded: { SALES_DB: true, 'SALES_DB.PUBLIC': true },
+  table: 'ORDERS_2026', recent: false, q: '',
+  pct: 0, importStage: 0, startedAt: 0, elapsed: 0,
+  datasets: [
+    { name: 'sample_orders.csv', badge: 'CSV', bg: '#E3F2E8', ink: '#1D6B3A' },
+    { name: 'Salesforce · Accounts', badge: 'SF', bg: '#E4ECFD', ink: '#2350B8' }
+  ],
+  active: 0, savedConn: false
+};
+let timers = [];
+const clearTimers = () => { timers.forEach(t => { clearTimeout(t); clearInterval(t); }); timers = []; };
+
+/* ---------- Icons ---------- */
+const I = {
+  x: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5E66" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  tick: c => `<svg width="${c||11}" height="${c||11}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>`,
+  spin: (c1='#DCD9F7', c2='#3F37C9', s=18) => `<svg class="spin" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="${c1}" stroke-width="3"/><path d="M21 12a9 9 0 0 0-9-9" stroke="${c2}" stroke-width="3" stroke-linecap="round"/></svg>`,
+  flake: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E6FA8" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M20.7 7 3.3 17"/></svg>',
+  lock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B5E66" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  alert: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>',
+  down: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B5E66" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  right: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B5E66" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
+  search: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B5E66" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+  plus: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3F37C9" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function cell(v, t){
+  if (v === null) return '<td class="null">empty</td>';
+  if (t === 'money') return `<td class="num">${v}</td>`;
+  if (['id','cid','rid','eid','kid','inv','pid','sku','date'].includes(t)) return `<td class="code">${v}</td>`;
+  return `<td>${esc(v)}</td>`;
+}
+
+/* ---------- Wizard ---------- */
+const STEPS = [['Credentials','Account and sign-in'],['Test connection','Check access'],['Choose data','Table to import'],['Import','Create the dataset']];
+const stepIndex = () => ({ creds: 0, testing: 1, select: 2, importing: 3, done: 4 })[S.step];
+
+function renderWizard(){
+  const root = document.getElementById('dialog-root');
+  if (!S.open) {
+    if (EMBED) { root.innerHTML = ''; tell({ type: 'close' }); return; }
+    root.innerHTML = `<div class="reopen"><span>The ${CN} wizard is closed.</span>
+      <button class="btn btn-primary" id="open-wizard">Open wizard</button></div>`;
+    return;
+  }
+  const idx = stepIndex();
+  const titles = {
+    creds: [`Connect to ${CN}`, S.savedConn ? 'Using your saved connection. Change anything, then test again.' : 'Enter your account details. We test them before saving.'],
+    testing: ['Testing connection', 'This usually takes a few seconds.'],
+    select: ['Choose data', 'Pick the table to bring in as a new dataset.'],
+    importing: ['Importing', `Bringing ${S.table} into your workspace.`],
+    done: ['Dataset ready', 'It opens in a new tab.']
+  };
+  const [title, lead] = titles[S.step];
+  root.innerHTML = `
+  <div class="scrim" id="scrim">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="wiz-title">
+      <aside class="rail">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:9px;background:${C.soft};display:flex;align-items:center;justify-content:center">${C.icon}</div>
+          <div><div class="hd" style="font-size:16px">${CN}</div><div style="font-size:12px;color:var(--muted)">New dataset</div></div>
+        </div>
+        <ol>${STEPS.map((s, i) => `
+          <li class="${i < idx ? 'done' : i === idx ? 'cur' : ''}" ${i === idx ? 'aria-current="step"' : ''}>
+            <span class="mark">${i < idx ? I.tick(12) : i + 1}</span>
+            <span><div class="lbl">${s[0]}</div><div class="sub">${s[1]}</div></span>
+          </li>`).join('')}</ol>
+        <div style="margin-top:auto;display:flex;gap:8px;font-size:12px;line-height:1.5;color:var(--muted)">${I.lock}<span>Read-only access. Prototype: credentials stay in this page and are never sent anywhere.</span></div>
+      </aside>
+      <section class="main">
+        <div class="head">
+          <div>
+            <div class="eyebrow">STEP ${Math.min(idx, 3) + 1} OF 4</div>
+            <h2 id="wiz-title">${title}</h2>
+            <p class="lead">${esc(lead)}</p>
+          </div>
+          <button class="icon-btn" data-act="close" aria-label="Close">${I.x}</button>
+        </div>
+        <div class="body" id="wiz-body">${bodyFor()}</div>
+        <div class="foot">${footFor()}</div>
+      </section>
+    </div>
+  </div>`;
+}
+
+function bodyFor(){
+  if (S.step === 'creds' || S.step === 'testing') return credsBody();
+  if (S.step === 'select') return selectBody();
+  if (S.step === 'importing') return importBody();
+  return doneBody();
+}
+
+function credsBody(){
+  const lock = S.step === 'testing' ? 'disabled' : '';
+  const errs = {
+    account: ["Couldn't reach that account", `No ${CN} account answered at <span class="mono">${esc(S.acct || '…')}</span>. Check the identifier: it looks like <span class="mono">orgname-accountname</span>.`],
+    auth: ["Couldn't sign in", `${CN} rejected the username or password. Check them, or try key pair sign-in if your admin set one up.`],
+    access: ['Signed in, but no warehouse access', `Your role can't use warehouse <span class="mono">${esc(S.wh)}</span>. Pick another warehouse or ask your admin to grant USAGE.`],
+    missing: ['A few details are missing', 'Fill in the highlighted fields to test the connection.']
+  };
+  const bad = f => S.error === 'missing' && !S[f] ? 'bad' : '';
+  const badAuth = S.error === 'auth' ? 'bad' : '';
+  return `
+    ${S.error ? `<div class="alert" role="alert">${I.alert}<div><strong>${errs[S.error][0]}</strong><p>${errs[S.error][1]}</p></div></div>` : ''}
+    <label class="field"><span>Account identifier</span>
+      <input class="input ${bad('acct')} ${S.error === 'account' ? 'bad' : ''}" data-f="acct" value="${esc(S.acct)}" placeholder="orgname-accountname" autocomplete="off" ${lock}>
+      <small>Found in ${CN} under your account menu › Account.</small>
+    </label>
+    <div class="field"><span>Sign in with</span>
+      <div class="seg" role="radiogroup" aria-label="Sign in with" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+        ${[['password','Password'],['key','Key pair'],['sso','SSO']].map(a => `<button role="radio" aria-checked="${S.auth === a[0]}" data-auth="${a[0]}" ${lock}>${a[1]}</button>`).join('')}
+      </div>
+    </div>
+    ${S.auth === 'sso' ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;flex-wrap:wrap">
+        <span style="font-size:13px;color:var(--ink-2)">You'll sign in on ${CN}'s page, then come back here.</span>
+        <span class="mono" style="font-size:12px;color:var(--muted)">Prototype: SSO is simulated</span>
+      </div>` : `
+      <div class="grid2">
+        <label class="field"><span>Username</span><input class="input ${bad('user')} ${badAuth}" data-f="user" value="${esc(S.user)}" autocomplete="off" ${lock}></label>
+        ${S.auth === 'password'
+          ? `<label class="field"><span>Password</span><input class="input ${bad('pass')} ${badAuth}" type="password" data-f="pass" value="${esc(S.pass)}" placeholder="Any value works" ${lock}></label>`
+          : `<div class="field"><span>Private key</span><button class="btn" data-act="fakekey" style="border-style:dashed;color:var(--accent);background:var(--sunken)" ${lock}>${S.keyFile ? esc(S.keyFile) : 'Upload .p8 file'}</button></div>`}
+      </div>`}
+    <div class="grid2">
+      <label class="field"><span>Role <span class="opt">optional</span></span><input class="input" data-f="role" value="${esc(S.role)}" placeholder="Default role" ${lock}></label>
+      <label class="field"><span>Warehouse <span class="opt">optional</span></span><input class="input ${S.error === 'access' ? 'bad' : ''}" data-f="wh" value="${esc(S.wh)}" placeholder="Default warehouse" ${lock}></label>
+    </div>
+    <label class="check"><input type="checkbox" data-f="save" ${S.save ? 'checked' : ''} ${lock}> Save this connection for Byte BX workspace</label>
+    ${S.step === 'testing' ? checklist(S.checks) : `<div class="hint">Prototype tips: password <span class="mono">wrong</span> → sign-in error · account <span class="mono">nope</span> → can't reach · warehouse <span class="mono">LOCKED_WH</span> → no access.</div>`}
+  `;
+}
+function checklist(items){
+  return `<div class="checklist" role="status" aria-live="polite">${items.map(c => `
+    <div class="ck ${c.s}">${c.s === 'ok' ? `<span class="dot-ok">${I.tick()}</span>` : c.s === 'busy' ? I.spin() : c.s === 'fail' ? `<span class="dot-fail">${I.x.replace('#5B5E66','#fff').replace('width="16" height="16"','width="10" height="10"').replace('stroke-width="2"','stroke-width="3.5"')}</span>` : '<span class="dot-wait"></span>'}
+    <span>${c.label}</span></div>`).join('')}</div>`;
+}
+
+function selectBody(){
+  const q = S.q.trim().toUpperCase();
+  let tree = '';
+  for (const db in CATALOG) {
+    const dbOpen = q || S.expanded[db];
+    let inner = '';
+    for (const sc in CATALOG[db]) {
+      const key = db + '.' + sc, scOpen = q || S.expanded[key];
+      const tbls = Object.entries(CATALOG[db][sc]).filter(([n]) => !q || n.includes(q));
+      if (q && !tbls.length) continue;
+      inner += `<button class="node" style="padding-left:22px" data-exp="${key}" aria-expanded="${!!scOpen}">${scOpen ? I.down : I.right}${sc}</button>`;
+      if (scOpen) inner += tbls.map(([n, t]) => `<button class="tbl" data-table="${n}" aria-pressed="${S.table === n}"><span>${n}</span><small>${fmt(t.rows)}</small></button>`).join('');
+    }
+    if (q && !inner) continue;
+    tree += `<button class="node" data-exp="${db}" aria-expanded="${!!dbOpen}">${dbOpen ? I.down : I.right}${db}</button>${dbOpen ? inner : ''}`;
+  }
+  if (!tree) tree = `<div style="padding:12px;font-size:12px;color:var(--muted)">No tables match “${esc(S.q)}”.</div>`;
+  const t = findTable(S.table);
+  const rows = genRows(S.table, 8);
+  const total = S.recent && t.cols.some(c => c[1] === 'date') ? Math.round(t.rows * 0.27) : t.rows;
+  return `
+    <div class="connected"><i></i>Connected to <span class="mono">${esc(S.acct)}</span> as ${esc(S.auth === 'sso' ? 'SSO user' : S.user)}${S.wh ? ' · warehouse ' + esc(S.wh) : ''}</div>
+    <div class="picker">
+      <div class="tree">
+        <label class="search">${I.search}<input id="tsearch" placeholder="Search tables" aria-label="Search tables" value="${esc(S.q)}"></label>
+        <div class="tree-list">${tree}</div>
+      </div>
+      <div class="preview">
+        <div class="preview-head"><span>Preview · <span class="mono">${t.db}.${t.schema}.${t.name}</span></span><span class="mono">${fmt(t.rows)} rows · ${t.cols.length} cols</span></div>
+        <div class="preview-scroll"><table><thead><tr>${t.cols.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map(r => `<tr>${r.map((v, j) => cell(v, t.cols[j][1])).join('')}</tr>`).join('')}</tbody></table></div>
+        ${t.cols.some(c => c[1] === 'date') ? `<label class="preview-foot"><input type="checkbox" data-f="recent" ${S.recent ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--accent)"> Only rows from the last 90 days <span class="mono" style="margin-left:auto;color:var(--muted)">${fmt(total)} rows</span></label>` : ''}
+      </div>
+    </div>`;
+}
+function importTotal(){ const t = findTable(S.table); return S.recent && t.cols.some(c => c[1] === 'date') ? Math.round(t.rows * 0.27) : t.rows; }
+
+function importBody(){
+  const total = importTotal(), pct = S.pct;
+  const left = Math.max(1, Math.round((100 - pct) / 100 * Math.min(12, 2 + total / 60000)));
+  const st = (i) => S.importStage > i ? 'ok' : S.importStage === i ? 'busy' : '';
+  return `<div class="progress" role="status" aria-live="polite">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+        <strong class="hd" style="font-size:16px">Importing <span class="mono" style="font-size:13px;letter-spacing:0">${S.table}</span></strong>
+        <span class="mono" style="font-size:13px;color:var(--ink-2)" id="pct">${pct}%</span>
+      </div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="Import progress"><i id="bar" style="width:${pct}%"></i></div>
+      <div class="mono" style="font-size:12px;color:var(--muted)" id="rowsline">${fmt(Math.round(total * pct / 100))} of ${fmt(total)} rows · about ${left} s left</div>
+    </div>
+    <div id="istages">${checklist([
+      { s: st(0), label: `Running query on ${esc(S.wh || 'default warehouse')}` },
+      { s: st(1), label: 'Downloading rows' },
+      { s: st(2), label: 'Checking column types and empty values' }
+    ]).replace('class="checklist"', 'class="checklist" style="background:transparent;padding:0"')}</div>
+    <div style="font-size:12px;color:var(--muted)">You can close this window. The dataset opens in a new tab when it's ready.</div>
+  </div>`;
+}
+
+function doneBody(){
+  const t = findTable(S.table), total = importTotal();
+  const empties = Math.round(total * 0.0044);
+  return `<div class="success">
+    <div class="ring"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1D6B3A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
+    <div class="hd" style="font-size:20px">${fmt(total)} rows imported</div>
+    <div style="font-size:13px;line-height:1.5;color:var(--muted);max-width:400px">New dataset <span class="mono" style="font-size:12px;color:var(--ink)">${CN} · ${t.name}</span>.${S.save ? ' The connection is saved, so next time you go straight to choosing data.' : ''}</div>
+    <div class="stats"><span>${t.cols.length} columns</span><span>·</span><span style="color:var(--warn)">${fmt(empties)} empty cells</span><span>·</span><span>${S.elapsed.toFixed(1)} s</span></div>
+  </div>`;
+}
+
+function footFor(){
+  const back = (label, act) => `<button class="btn" data-act="${act}">${label}</button>`;
+  const next = (label, act, busy) => `<button class="btn btn-primary" data-act="${act}" ${busy ? 'disabled' : ''}>${busy ? I.spin('rgba(255,255,255,.35)', '#fff', 16) : ''}${label}</button>`;
+  switch (S.step) {
+    case 'creds': return back('Cancel', 'close') + next('Test connection', 'test');
+    case 'testing': return back('Cancel test', 'canceltest') + next('Testing…', '', true);
+    case 'select': return back('Back', 'tocreds') + next(`Import ${fmt(importTotal())} rows`, 'import');
+    case 'importing': return back('Cancel import', 'cancelimport') + `<div style="display:flex;gap:8px"><button class="btn" data-act="background">Run in background</button>${next('Importing…', '', true)}</div>`;
+    case 'done': return back('Import another table', 'toselect') + next('Continue', 'open');
+  }
+}
+
+/* ---------- Behaviour ---------- */
+function runTest(){
+  // validation
+  const need = S.auth === 'sso' ? ['acct'] : S.auth === 'key' ? ['acct', 'user'] : ['acct', 'user', 'pass'];
+  if (need.some(f => !S[f])) { S.error = 'missing'; renderWizard(); return; }
+  S.error = null; S.step = 'testing';
+  const who = S.auth === 'sso' ? 'SSO' : S.user;
+  S.checks = [
+    { s: 'busy', label: `Reaching ${esc(S.acct)}` },
+    { s: '', label: `Signing in as ${esc(who)}` },
+    { s: '', label: `Checking ${S.wh ? 'warehouse ' + esc(S.wh) : 'default warehouse'} and read access` }
+  ];
+  renderWizard();
+  const failAt = S.acct.toLowerCase() === 'nope' ? 0 : (S.auth === 'password' && S.pass === 'wrong') ? 1 : S.wh.toUpperCase() === 'LOCKED_WH' ? 2 : -1;
+  const errFor = ['account', 'auth', 'access'];
+  [0, 1, 2].forEach(i => {
+    timers.push(setTimeout(() => {
+      if (failAt === i) {
+        S.checks[i].s = 'fail'; refreshBody();
+        timers.push(setTimeout(() => { S.step = 'creds'; S.error = errFor[i]; renderWizard(); }, 700));
+        clearTimersAfter(i); return;
+      }
+      S.checks[i].s = 'ok';
+      if (S.checks[i + 1]) S.checks[i + 1].s = 'busy';
+      refreshBody();
+      if (i === 2) timers.push(setTimeout(() => { S.step = 'select'; S.savedConn = S.save; renderWizard(); }, 500));
+    }, 750 * (i + 1)));
+  });
+}
+function clearTimersAfter(){ /* later checklist timers are no-ops once step leaves 'testing' */ }
+function refreshBody(){ if (S.step !== 'testing') return; const b = document.getElementById('wiz-body'); if (b) b.innerHTML = credsBody(); }
+
+function runImport(){
+  S.step = 'importing'; S.pct = 0; S.importStage = 0; S.startedAt = performance.now();
+  renderWizard();
+  const total = importTotal();
+  const inc = Math.max(1, Math.round(100 / Math.min(60, 12 + total / 12000)));
+  timers.push(setTimeout(() => { S.importStage = 1; paintImport(); }, 600));
+  timers.push(setTimeout(() => {
+    const iv = setInterval(() => {
+      S.pct = Math.min(100, S.pct + inc);
+      if (S.pct >= 100) {
+        clearInterval(iv); S.importStage = 2; paintImport();
+        timers.push(setTimeout(() => { S.importStage = 3; S.elapsed = (performance.now() - S.startedAt) / 1000; finishImport(); }, 700));
+      } else paintImport();
+    }, 160);
+    timers.push(iv);
+  }, 650));
+}
+function paintImport(){
+  if (S.step !== 'importing' || !S.open) return;
+  const b = document.getElementById('wiz-body'); if (b) b.innerHTML = importBody();
+}
+function finishImport(){
+  if (S.open) { S.step = 'done'; renderWizard(); }
+  else { addDataset(); toast(`${CN} · ${S.table} is ready in a new tab.`); }
+}
+function addDataset(){
+  if (S.datasets.some(d => d.table === S.table)) { S.active = S.datasets.findIndex(d => d.table === S.table); return; }
+  S.datasets.push({ name: CN + ' · ' + S.table, badge: C.badge, bg: C.soft, ink: C.color, table: S.table, rows: importTotal() });
+  S.active = S.datasets.length - 1;
+}
+function toast(msg){
+  if (EMBED && !S.open) { tell({ type: 'toast', msg }); return; }   // overlay is gone, let the host show it
+  const r = document.getElementById('toast-root');
+  r.innerHTML = `<div class="toast" role="status"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7FD19E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>${esc(msg)}</div>`;
+  setTimeout(() => { r.innerHTML = ''; }, 3600);
+}
+function openWizard(){
+  clearTimers();
+  Object.assign(S, { open: true, step: S.savedConn ? 'select' : 'creds', error: null, pct: 0, importStage: 0 });
+  renderWizard();
+}
+function closeWizard(){
+  if (S.step === 'testing') clearTimers();
+  S.open = false; renderWizard();
+}
+
+document.addEventListener('click', e => {
+  if (e.target.closest('#open-wizard')) { openWizard(); return; }
+  if (e.target.id === 'scrim' && S.step !== 'importing') { closeWizard(); return; }
+  const auth = e.target.closest('[data-auth]');
+  if (auth) { S.auth = auth.dataset.auth; S.error = null; renderWizard(); return; }
+  const exp = e.target.closest('[data-exp]');
+  if (exp) { const k = exp.dataset.exp; S.expanded[k] = !S.expanded[k]; document.getElementById('wiz-body').innerHTML = selectBody(); return; }
+  const tb = e.target.closest('[data-table]');
+  if (tb) { S.table = tb.dataset.table; renderWizard(); return; }
+  const a = e.target.closest('[data-act]');
+  if (!a) return;
+  switch (a.dataset.act) {
+    case 'close': S.step === 'importing' ? (S.open = false, renderWizard(), toast('Import continues in the background.')) : closeWizard(); break;
+    case 'test': runTest(); break;
+    case 'canceltest': clearTimers(); S.step = 'creds'; renderWizard(); break;
+    case 'tocreds': S.step = 'creds'; renderWizard(); break;
+    case 'toselect': S.step = 'select'; renderWizard(); break;
+    case 'import': runImport(); break;
+    case 'cancelimport': clearTimers(); S.step = 'select'; renderWizard(); toast('Import cancelled. Nothing was added.'); break;
+    case 'background': S.open = false; renderWizard(); toast(`Importing ${S.table} in the background…`); break;
+    case 'open': S.open = false; renderWizard(); addDataset(); toast(`Opened ${CN} · ${S.table} in a new tab.`); break;
+    case 'fakekey': S.keyFile = 'rsa_key.p8'; renderWizard(); break;
+  }
+});
+document.addEventListener('input', e => {
+  const f = e.target.dataset && e.target.dataset.f;
+  if (f) { S[f] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; if (f === 'recent') renderWizard(); return; }
+  if (e.target.id === 'tsearch') {
+    S.q = e.target.value;
+    const list = document.querySelector('.tree-list');
+    const tmp = document.createElement('div'); tmp.innerHTML = selectBody();
+    list.innerHTML = tmp.querySelector('.tree-list').innerHTML;
+  }
+});
+document.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.f === 'save') S.save = e.target.checked; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.open && S.step !== 'importing') closeWizard(); });
+
+renderWizard();
+</script>
+</body>
+</html>

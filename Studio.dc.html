@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Data Purge Studio — focused studio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F4F3EF;color:#15171C;-webkit-font-smoothing:antialiased}
+a{color:#3F37C9}a:hover{color:#2E279E}
+button,input,select{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; display: flex; flex-direction: column; background: #F4F3EF; font-family: 'Geist', system-ui, sans-serif; color: #15171C; overflow: hidden">
+
+  <!-- 1. App bar: identity only -->
+  <header style="height: 52px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #FFFFFF">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 28px; height: 28px; border-radius: 7px; background: #15171C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">BX</div>
+      <div style="font-size: 15px; font-weight: 600">Data Purge Studio</div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B8B5AD" stroke-width="1.5" stroke-linecap="round"><path d="M15 4 9 20"/></svg>
+      <div style="font-size: 14px; color: #5B5E66">Byte BX</div>
+    </div>
+    <button aria-label="Account: 233@email.com" style="display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 4px; border: 0; background: transparent; border-radius: 18px; cursor: pointer">
+      <div style="font-size: 13px; color: #5B5E66">233@email.com</div>
+      <div style="width: 30px; height: 30px; border-radius: 15px; background: #E7E5FB; color: #3F37C9; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600">23</div>
+    </button>
+  </header>
+
+  <!-- 2. Open files as tabs + Add data -->
+  <nav aria-label="Open datasets" style="height: 48px; flex-shrink: 0; display: flex; align-items: flex-end; gap: 4px; padding: 0 16px; background: #FFFFFF; border-bottom: 1px solid #E4E2DC">
+    <button aria-current="true" style="height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid #E4E2DC; border-bottom: 0; border-radius: 10px 10px 0 0; background: #F4F3EF; margin-bottom: -1px; cursor: pointer; position: relative">
+      <span style="font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 500; padding: 2px 5px; border-radius: 4px; background: #E3F2E8; color: #1D6B3A">CSV</span>
+      <span style="font-size: 14px; font-weight: 600; color: #15171C">sample_orders.csv</span>
+      <span aria-label="Unsaved changes" style="width: 7px; height: 7px; border-radius: 4px; background: #C98A1B"></span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6A6D74" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <button style="height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; border-radius: 10px 10px 0 0; background: transparent; cursor: pointer">
+      <span style="font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 500; padding: 2px 5px; border-radius: 4px; background: #E4ECFD; color: #2350B8">SF</span>
+      <span style="font-size: 14px; font-weight: 500; color: #5B5E66">Salesforce · Accounts</span>
+    </button>
+    <button id="addBtn" aria-expanded="false" aria-haspopup="menu" style="height: 32px; align-self: center; margin-left: 6px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px dashed #C9C5F3; border-radius: 8px; background: #FFFFFF; font-size: 13px; font-weight: 500; color: #3F37C9; cursor: pointer">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3F37C9" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Add data
+    </button>
+    <div style="margin-left: auto; align-self: center; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">2 / 5 datasets</div>
+  </nav>
+
+  <!-- 3. File bar: everything about the file in edit -->
+  <div style="height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #F4F3EF">
+    <div style="display: flex; flex-direction: column; gap: 3px">
+      <div style="font-size: 18px; font-weight: 600; letter-spacing: -0.01em">sample_orders.csv</div>
+      <div style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1,248 rows · 8 columns · 3 changes not saved</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px">
+      <button aria-label="Undo last change" style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid #D9D6CE; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15171C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+      </button>
+      <button id="histBtn" aria-expanded="false" aria-haspopup="dialog" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #D9D6CE; background: #FFFFFF; font-size: 14px; font-weight: 500; color: #15171C; display: flex; align-items: center; gap: 8px; cursor: pointer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15171C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        History
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; padding: 1px 6px; border-radius: 10px; background: #ECEAE4; color: #3C3F46">3</span>
+      </button>
+      <button style="height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid #D9D6CE; background: #FFFFFF; font-size: 14px; font-weight: 500; color: #15171C; cursor: pointer">Save draft</button>
+      <button id="dlBtn" aria-expanded="false" aria-haspopup="menu" style="height: 36px; padding: 0 12px 0 14px; border-radius: 8px; border: 0; background: #3F37C9; color: #FFFFFF; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; cursor: pointer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Download
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Work area: data + operations on it -->
+  <div style="flex-grow: 1; min-height: 0; display: flex; gap: 12px; padding: 0 20px 20px 20px">
+
+    <section aria-label="Data" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column">
+      <div style="height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 16px; border-bottom: 1px solid #E4E2DC">
+        <label style="display: flex; align-items: center; gap: 8px; height: 32px; width: 260px; padding: 0 10px; border: 1px solid #E4E2DC; border-radius: 8px; background: #FAF9F6; box-sizing: border-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B5E66" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input placeholder="Search 1,248 rows" aria-label="Search rows" style="border: 0; outline: none; font-size: 13px; width: 100%; background: transparent; color: #15171C">
+        </label>
+        <div style="font-size: 12px; color: #5B5E66">Showing 1–14 of 1,248</div>
+      </div>
+      <div style="flex-grow: 1; min-height: 0; overflow: hidden">
+        <table style="border-collapse: collapse; font-size: 13px; width: 100%; table-layout: fixed">
+          <thead>
+            <tr style="height: 48px; background: #FAF9F6">
+              <th style="width: 60px; text-align: left; padding: 0 14px; border-bottom: 1px solid #E4E2DC; font-weight: 500">id</th>
+              <th style="width: 104px; text-align: left; padding: 0 14px; border-bottom: 1px solid #E4E2DC; font-weight: 500">order_date</th>
+              <th style="width: 170px; text-align: left; padding: 0 14px; border-bottom: 1px solid #E4E2DC; font-weight: 500">customer_email</th>
+              <th style="width: 120px; text-align: left; padding: 0 14px; border-bottom: 2px solid #3F37C9; background: #EFEEFC; color: #2E279E; font-weight: 500">region<span style="display: block; font-family: 'Geist Mono', monospace; font-size: 10px; color: #B4530A">37 empty</span></th>
+              <th style="width: 110px; text-align: left; padding: 0 14px; border-bottom: 1px solid #E4E2DC; font-weight: 500">product</th>
+              <th style="width: 48px; text-align: right; padding: 0 14px; border-bottom: 1px solid #E4E2DC; font-weight: 500">qty</th>
+              <th style="width: 84px; text-align: right; padding: 0 14px; border-bottom: 1px solid #E4E2DC; font-weight: 500">amount</th>
+              <th style="width: 84px; text-align: left; padding: 0 14px; border-bottom: 1px solid #E4E2DC; font-weight: 500">status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1001</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-02</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">anna.k@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">EU-West</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Starter plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">1</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">49.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1002</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-02</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">j.moreno@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #FDF1E3; color: #B4530A; font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500">empty</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Pro plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">2</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">198.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1003</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-03</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">li.wei@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">APAC</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Starter plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">1</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">49.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">refunded</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1004</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-03</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">sam.o@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">NA-East</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Team plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">5</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">745.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1005</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-04</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">r.patel@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #FDF1E3; color: #B4530A; font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500">empty</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Pro plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">1</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">99.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">pending</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1006</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-04</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">m.fischer@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">EU-Central</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Pro plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">1</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">99.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1007</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-05</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">t.nguyen@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">APAC</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Team plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">3</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">447.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1008</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-05</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">e.rossi@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">EU-South</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Starter plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">2</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">98.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1009</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-06</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">c.brown@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #FDF1E3; color: #B4530A; font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500">empty</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Starter plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">1</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">49.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">failed</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1010</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-06</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">h.sato@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">APAC</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Pro plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">1</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">99.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1011</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-07</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">o.adeyemi@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">EU-West</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Team plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">4</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">596.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1012</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-07</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">p.silva@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">NA-South</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Pro plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">1</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">99.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1013</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-08</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">k.larsen@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #F8F7FE">EU-North</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Starter plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">1</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">49.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+            <tr style="height: 42px">
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">1014</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; font-family: 'Geist Mono', monospace; font-size: 12px; white-space: nowrap">2026-08-08</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">d.cohen@mail.com</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; background: #FDF1E3; color: #B4530A; font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500">empty</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; white-space: nowrap">Pro plan</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">2</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12px">198.00</td>
+                <td style="padding: 0 14px; border-bottom: 1px solid #F0EEE9; color: #3C3F46">paid</td>
+              </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Operations: list, or one operation at a time -->
+    <aside aria-label="Operations" style="width: 340px; flex-shrink: 0; background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden">
+      <sc-if value="{{listMode}}" hint-placeholder-val="{{false}}">
+        <div style="padding: 18px 18px 12px 18px; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">Operations</h2>
+          <div role="tablist" aria-label="Operation groups" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 3px; background: #F1EFEA; border-radius: 10px">
+            <button role="tab" aria-selected="true" style="height: 30px; border: 0; border-radius: 8px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(21,23,28,0.08); font-size: 13px; font-weight: 500; color: #15171C">Prepare</button>
+            <button role="tab" aria-selected="false" style="height: 30px; border: 0; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 500; color: #5B5E66">Transform</button>
+            <button role="tab" aria-selected="false" style="height: 30px; border: 0; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 500; color: #5B5E66">AI</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; padding: 0 8px">
+          <sc-for list="{{ops}}" as="o" hint-placeholder-count="3">
+            <button onClick="{{o.open}}" style="display: flex; align-items: center; gap: 12px; padding: 12px 10px; border: 0; border-radius: 10px; background: transparent; cursor: pointer; text-align: left">
+              <div style="{{o.iconBg}}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{o.ink}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{o.icon}}"/></svg>
+              </div>
+              <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+                <div style="font-size: 14px; font-weight: 500; color: #15171C">{{o.name}}</div>
+                <div style="font-size: 12px; color: #5B5E66">{{o.desc}}</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8C8F96" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{nullsMode}}" hint-placeholder-val="{{true}}">
+        <div style="padding: 14px 18px; border-bottom: 1px solid #ECEAE4">
+          <button onClick="{{backToList}}" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 6px 0 2px; border: 0; background: transparent; font-size: 13px; font-weight: 500; color: #5B5E66; cursor: pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B5E66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+            All operations
+          </button>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 16px; flex-grow: 1">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h2 style="margin: 0; font-size: 17px; font-weight: 600">Remove nulls</h2>
+            <p style="margin: 0; font-size: 13px; color: #5B5E66">Drop rows with empty values.</p>
+          </div>
+          <div role="radiogroup" aria-label="Scope" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; padding: 3px; background: #F1EFEA; border-radius: 8px">
+            <button role="radio" aria-checked="{{nullColStr}}" onClick="{{setNullCol}}" style="{{nullColStyle}}">In one column</button>
+            <button role="radio" aria-checked="{{nullAnyStr}}" onClick="{{setNullAny}}" style="{{nullAnyStyle}}">In any column</button>
+          </div>
+          <sc-if value="{{nullCol}}" hint-placeholder-val="{{true}}">
+            <label style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; font-weight: 500; color: #3C3F46">Column</span>
+              <select style="height: 38px; padding: 0 10px; border: 1px solid #3F37C9; box-shadow: 0 0 0 3px #E3E1FA; border-radius: 8px; background: #FFFFFF; font-family: 'Geist Mono', monospace; font-size: 13px; color: #15171C">
+                <option>region</option><option>customer_email</option><option>product</option><option>status</option>
+              </select>
+            </label>
+          </sc-if>
+          <div style="display: flex; gap: 10px; padding: 10px 12px; border-radius: 8px; background: #FDF1E3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4530A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+            <div style="font-size: 13px; line-height: 1.45; color: #6E3207">{{nullImpact}}</div>
+          </div>
+          <div style="margin-top: auto; display: flex; gap: 8px">
+            <button onClick="{{backToList}}" style="height: 40px; padding: 0 16px; border: 1px solid #D9D6CE; border-radius: 8px; background: #FFFFFF; font-size: 14px; font-weight: 500; color: #15171C; cursor: pointer">Cancel</button>
+            <button style="flex-grow: 1; height: 40px; border: 0; border-radius: 8px; background: #3F37C9; color: #FFFFFF; font-size: 14px; font-weight: 500; cursor: pointer">{{nullCta}}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{otherMode}}" hint-placeholder-val="{{false}}">
+        <div style="padding: 14px 18px; border-bottom: 1px solid #ECEAE4">
+          <button onClick="{{backToList}}" style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 6px 0 2px; border: 0; background: transparent; font-size: 13px; font-weight: 500; color: #5B5E66; cursor: pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B5E66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+            All operations
+          </button>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 16px; flex-grow: 1">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h2 style="margin: 0; font-size: 17px; font-weight: 600">{{otherTitle}}</h2>
+            <p style="margin: 0; font-size: 13px; color: #5B5E66">{{otherDesc}}</p>
+          </div>
+          <label style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 12px; font-weight: 500; color: #3C3F46">Column</span>
+            <select style="height: 38px; padding: 0 10px; border: 1px solid #D9D6CE; border-radius: 8px; background: #FFFFFF; font-family: 'Geist Mono', monospace; font-size: 13px; color: #15171C">
+              <option>order_date</option><option>customer_email</option><option>region</option>
+            </select>
+          </label>
+          <sc-if value="{{isRename}}" hint-placeholder-val="{{false}}">
+            <label style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; font-weight: 500; color: #3C3F46">New name</span>
+              <input placeholder="e.g. ordered_on" style="height: 38px; padding: 0 10px; border: 1px solid #D9D6CE; border-radius: 8px; font-family: 'Geist Mono', monospace; font-size: 13px; box-sizing: border-box">
+            </label>
+          </sc-if>
+          <div style="margin-top: auto; display: flex; gap: 8px">
+            <button onClick="{{backToList}}" style="height: 40px; padding: 0 16px; border: 1px solid #D9D6CE; border-radius: 8px; background: #FFFFFF; font-size: 14px; font-weight: 500; color: #15171C; cursor: pointer">Cancel</button>
+            <button style="flex-grow: 1; height: 40px; border: 0; border-radius: 8px; background: #3F37C9; color: #FFFFFF; font-size: 14px; font-weight: 500; cursor: pointer">{{otherCta}}</button>
+          </div>
+        </div>
+      </sc-if>
+    </aside>
+  </div>
+
+  <!-- Add data menu -->
+  <div id="ovAdd" hidden>
+    <div role="menu" aria-label="Add data" style="position: absolute; top: 98px; left: 400px; width: 320px; background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,23,28,0.14), 0 2px 6px rgba(21,23,28,0.06); padding: 8px; display: flex; flex-direction: column; gap: 2px">
+      <button role="menuitem" style="display: flex; align-items: center; gap: 12px; padding: 10px; border: 0; border-radius: 8px; background: #F4F3EF; cursor: pointer; text-align: left">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #FFFFFF; border: 1px solid #E4E2DC; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3F37C9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <div style="font-size: 14px; font-weight: 500; color: #15171C">Upload a file</div>
+          <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #5B5E66">CSV · XLSX · XML · JSON</div>
+        </div>
+      </button>
+      <div style="padding: 10px 10px 4px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B5E66">Connect a source</div>
+      <button role="menuitem" style="display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; text-align: left">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #E3F1FB; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E6FA8" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M20.7 7 3.3 17"/></svg></div>
+        <div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 14px; font-weight: 500">Snowflake</div><div style="font-size: 12px; color: #5B5E66">Cloud data warehouse</div></div>
+      </button>
+      <button role="menuitem" style="display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; text-align: left">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #E4ECFD; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2350B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></svg></div>
+        <div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 14px; font-weight: 500">Salesforce</div><div style="font-size: 12px; color: #5B5E66">CRM objects &amp; reports</div></div>
+      </button>
+      <button role="menuitem" style="display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; text-align: left">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #ECEAE4; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3C3F46" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13"/></svg></div>
+        <div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 14px; font-weight: 500">Database</div><div style="font-size: 12px; color: #5B5E66">Postgres, MySQL, SQL Server</div></div>
+      </button>
+      <div style="margin-top: 6px; padding: 10px 10px 4px 10px; border-top: 1px solid #ECEAE4; font-size: 12px; color: #5B5E66">3 of 5 dataset slots left. Each opens in its own tab.</div>
+    </div>
+  </div>
+
+  <!-- Download menu -->
+  <div id="ovDl" hidden>
+    <div role="menu" aria-label="Download" style="position: absolute; top: 156px; right: 20px; width: 280px; background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,23,28,0.14), 0 2px 6px rgba(21,23,28,0.06); padding: 8px; display: flex; flex-direction: column; gap: 2px">
+      <div style="padding: 8px 10px 6px 10px; font-size: 12px; color: #5B5E66">Download <span style="font-weight: 600; color: #15171C">sample_orders.csv</span> with 3 changes applied</div>
+      <button role="menuitem" style="display: flex; align-items: center; justify-content: space-between; height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: #F4F3EF; cursor: pointer; font-size: 14px; font-weight: 500; color: #15171C">CSV<span style="font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 400; color: #5B5E66">original format</span></button>
+      <button role="menuitem" style="display: flex; align-items: center; height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; font-size: 14px; color: #15171C">Excel (.xlsx)</button>
+      <button role="menuitem" style="display: flex; align-items: center; height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; font-size: 14px; color: #15171C">JSON</button>
+      <button role="menuitem" style="display: flex; align-items: center; height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; font-size: 14px; color: #15171C">XML</button>
+    </div>
+  </div>
+
+  <!-- History drawer -->
+  <div id="ovHist" hidden>
+    <div role="dialog" aria-label="History" style="position: absolute; top: 156px; right: 150px; width: 340px; background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,23,28,0.14), 0 2px 6px rgba(21,23,28,0.06); padding: 14px; display: flex; flex-direction: column; gap: 4px">
+      <div style="padding: 0 4px 8px 4px; font-size: 14px; font-weight: 600">Changes to this file</div>
+      <div style="display: flex; align-items: baseline; gap: 12px; padding: 8px 4px; border-top: 1px solid #F0EEE9"><span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">14:06</span><span style="font-size: 13px; flex-grow: 1">Removed column <span style="font-family: 'Geist Mono', monospace; font-size: 12px">discount_code</span></span><button style="border: 0; background: transparent; font-size: 12px; font-weight: 500; color: #3F37C9; cursor: pointer">Undo</button></div>
+      <div style="display: flex; align-items: baseline; gap: 12px; padding: 8px 4px; border-top: 1px solid #F0EEE9"><span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">14:04</span><span style="font-size: 13px; flex-grow: 1">Renamed <span style="font-family: 'Geist Mono', monospace; font-size: 12px">cust_mail</span> → <span style="font-family: 'Geist Mono', monospace; font-size: 12px">customer_email</span></span></div>
+      <div style="display: flex; align-items: baseline; gap: 12px; padding: 8px 4px; border-top: 1px solid #F0EEE9"><span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #5B5E66">14:02</span><span style="font-size: 13px; flex-grow: 1">Imported 1,248 rows</span></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"overlay":{"editor":"enum","options":["none","add","download","history"],"default":"none"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const o = props.overlay && props.overlay !== 'none' ? props.overlay : null;
+    this.state = { overlay: o, op: 'nulls', nullMode: 'col' };
+  }
+  renderVals() {
+    const s = this.state;
+    const ov = (k) => () => this.setState({ overlay: s.overlay === k ? null : k });
+    const seg = (on) => on
+      ? 'height: 30px; border: 0; border-radius: 6px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(21,23,28,0.08); font-size: 13px; font-weight: 500; color: #15171C; cursor: pointer'
+      : 'height: 30px; border: 0; border-radius: 6px; background: transparent; font-size: 13px; font-weight: 500; color: #5B5E66; cursor: pointer';
+    const addOpen = s.overlay === 'add';
+    const hl = s.op === 'nulls' && s.nullMode === 'col';
+    const base = 'padding: 0 14px; border-bottom: 1px solid #F0EEE9; ';
+    const rows = [
+      ['1001','2026-08-02','anna.k@mail.com','EU-West','Starter plan','1','49.00','paid'],
+      ['1002','2026-08-02','j.moreno@mail.com','','Pro plan','2','198.00','paid'],
+      ['1003','2026-08-03','li.wei@mail.com','APAC','Starter plan','1','49.00','refunded'],
+      ['1004','2026-08-03','sam.o@mail.com','NA-East','Team plan','5','745.00','paid'],
+      ['1005','2026-08-04','r.patel@mail.com','','Pro plan','1','99.00','pending'],
+      ['1006','2026-08-04','m.fischer@mail.com','EU-Central','Pro plan','1','99.00','paid'],
+      ['1007','2026-08-05','t.nguyen@mail.com','APAC','Team plan','3','447.00','paid'],
+      ['1008','2026-08-05','e.rossi@mail.com','EU-South','Starter plan','2','98.00','paid'],
+      ['1009','2026-08-06','c.brown@mail.com','','Starter plan','1','49.00','failed'],
+      ['1010','2026-08-06','h.sato@mail.com','APAC','Pro plan','1','99.00','paid'],
+      ['1011','2026-08-07','o.adeyemi@mail.com','EU-West','Team plan','4','596.00','paid'],
+      ['1012','2026-08-07','p.silva@mail.com','NA-South','Pro plan','1','99.00','paid'],
+      ['1013','2026-08-08','k.larsen@mail.com','EU-North','Starter plan','1','49.00','paid'],
+      ['1014','2026-08-08','d.cohen@mail.com','','Pro plan','2','198.00','paid']
+    ].map((r) => {
+      const empty = r[3] === '';
+      let regStyle = base;
+      if (hl && empty) regStyle += 'background: #FDF1E3; color: #B4530A; font-family: \'Geist Mono\', monospace; font-size: 11px; font-weight: 500';
+      else if (hl) regStyle += 'background: #F8F7FE';
+      else if (empty) regStyle += 'color: #8C8F96';
+      return { id: r[0], date: r[1], email: r[2], regText: empty ? (hl ? 'empty' : '—') : r[3], regStyle, product: r[4], qty: r[5], amount: r[6], status: r[7] };
+    });
+    const ops = [
+      { key: 'cols', name: 'Remove columns', desc: "Drop columns you don't need", icon: 'M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 4v16M15 4v16', ink: '#B42318', bg: '#FCEDEB' },
+      { key: 'nulls', name: 'Remove nulls', desc: 'Drop rows with empty values', icon: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM6.5 17.5l11-11', ink: '#B4530A', bg: '#FDF1E3' },
+      { key: 'ren', name: 'Replace / rename', desc: 'Rename a column or replace values', icon: 'M4 8h13l-3-3M20 16H7l3 3', ink: '#2350B8', bg: '#E8EEFC' }
+    ].map((o) => Object.assign({}, o, {
+      iconBg: 'width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: ' + o.bg,
+      open: () => this.setState({ op: o.key })
+    }));
+    const nullCol = s.nullMode === 'col';
+    return {
+      rows, ops,
+      addOpen, addOpenStr: String(addOpen), toggleAdd: ov('add'),
+      addBtnStyle: 'height: 32px; align-self: center; margin-left: 6px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px ' + (addOpen ? 'solid #3F37C9' : 'dashed #C9C5F3') + '; border-radius: 8px; background: ' + (addOpen ? '#EFEEFC' : '#FFFFFF') + '; font-size: 13px; font-weight: 500; color: #3F37C9; cursor: pointer',
+      dlOpen: s.overlay === 'download', dlOpenStr: String(s.overlay === 'download'), toggleDownload: ov('download'),
+      histOpen: s.overlay === 'history', histOpenStr: String(s.overlay === 'history'), toggleHistory: ov('history'),
+      regionHeadStyle: hl
+        ? 'width: 120px; text-align: left; padding: 0 14px; border-bottom: 2px solid #3F37C9; background: #EFEEFC; color: #2E279E; font-weight: 500'
+        : 'width: 120px; text-align: left; padding: 0 14px; border-bottom: 1px solid #E4E2DC; font-weight: 500',
+      regionBadgeStyle: hl ? 'display: block; font-family: \'Geist Mono\', monospace; font-size: 10px; color: #B4530A' : 'display: none',
+      listMode: !s.op, nullsMode: s.op === 'nulls', otherMode: s.op === 'cols' || s.op === 'ren',
+      backToList: () => this.setState({ op: null }),
+      otherTitle: s.op === 'cols' ? 'Remove columns' : 'Replace / rename',
+      otherDesc: s.op === 'cols' ? "Drop columns you don't need." : 'Rename a column or replace values.',
+      otherCta: s.op === 'cols' ? 'Remove column' : 'Rename column',
+      isRename: s.op === 'ren',
+      nullCol, nullColStr: String(nullCol), nullAnyStr: String(!nullCol),
+      nullColStyle: seg(nullCol), nullAnyStyle: seg(!nullCol),
+      setNullCol: () => this.setState({ nullMode: 'col' }), setNullAny: () => this.setState({ nullMode: 'any' }),
+      nullImpact: nullCol ? '37 of 1,248 rows have no region. They are highlighted in the table.' : '96 of 1,248 rows have at least one empty cell.',
+      nullCta: nullCol ? 'Remove 37 rows' : 'Remove 96 rows'
+    };
+  }
+}
+</script>
+<style>
+  #addBtn[aria-expanded="true"] { border: 1px solid #3F37C9 !important; background: #EFEEFC !important; }
+  #addBtn:hover { background: #F7F6FE !important; }
+</style>
+<script>
+(function () {
+  var pairs = { add: ['addBtn', 'ovAdd'], dl: ['dlBtn', 'ovDl'], hist: ['histBtn', 'ovHist'] };
+  var current = null;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function place(key) {
+    // Anchor the Add data menu under its button
+    if (key !== 'add') return;
+    var btn = $('addBtn'), menu = $('ovAdd').firstElementChild;
+    var host = menu.offsetParent || document.body, h = host.getBoundingClientRect(), b = btn.getBoundingClientRect();
+    menu.style.top = (b.bottom - h.top + 6) + 'px';
+    menu.style.left = Math.max(8, Math.min(b.left - h.left, h.width - menu.offsetWidth - 8)) + 'px';
+  }
+  function setOpen(key) {
+    current = key;
+    Object.keys(pairs).forEach(function (k) {
+      var on = k === key;
+      $(pairs[k][1]).hidden = !on;
+      $(pairs[k][0]).setAttribute('aria-expanded', String(on));
+    });
+    if (key) place(key);
+  }
+  Object.keys(pairs).forEach(function (k) {
+    $(pairs[k][0]).addEventListener('click', function (e) {
+      e.stopPropagation();
+      setOpen(current === k ? null : k);
+    });
+    // Picking something inside a menu closes it
+    $(pairs[k][1]).addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (e.target.closest('[role="menuitem"]')) setOpen(null);
+    });
+  });
+  document.addEventListener('click', function () { if (current) setOpen(null); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && current) { var b = $(pairs[current][0]); setOpen(null); b.focus(); } });
+  window.addEventListener('resize', function () { if (current) place(current); });
+})();
+</script></body>
+</html>
